@@ -36,6 +36,26 @@ dbt deps
 
 Once installed, the custom materializations are automatically available in your dbt project.
 
-## Version
+## Versioning
+
+This project follows [Semantic Versioning](https://semver.org/) (MAJOR.MINOR.PATCH).
 
 Current version: 1.0.0
+
+### Using in Your Project
+
+Always pin to a specific version tag in `packages.yml`:
+
+```yaml
+packages:
+  - git: "git@github.com:yourorg/dbt-shared.git"
+    revision: v1.0.0
+```
+
+### Release Process
+
+Releases are automated:
+
+1. Update `version` in `dbt_project.yml`
+2. Merge to `main`
+3. GitHub Actions auto-creates the tag and release
