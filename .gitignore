@@ -1,0 +1,28 @@
+# dbt
+target/
+dbt_packages/
+logs/
+dbt_modules/
+
+# Python
+*.pyc
+__pycache__/
+.venv/
+venv/
+*.egg-info/
+.pytest_cache/
+
+# IDE
+.vscode/
+.idea/
+*.swp
+*.swo
+*~
+
+# OS
+.DS_Store
+Thumbs.db
+
+# Environment
+.env
+.env.local
