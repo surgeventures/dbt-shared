@@ -30,7 +30,7 @@
 
   {# Iceberg tables in catalog-linked databases may not be detected by load_relation() #}
   {% if not existing_relation %}
-    {% set existing_relation = fresha_iceberg_check_table_exists(identifier, database, schema, catalog_relation) %}
+    {% set existing_relation = dbt_fresha_shared.fresha_iceberg_check_table_exists(identifier, database, schema, catalog_relation) %}
   {% endif %}
 
   {%- set unique_key = config.get('unique_key') -%}
@@ -48,18 +48,21 @@
   {% if existing_relation is none %}
     {{ log("Creating initial table", info=False) }}
     {% set sql_columns = get_column_schema_from_query(compiled_code, config.get('sql_header', none)) %}
-    {{ fresha_iceberg_create_table(target_relation, sql_columns, catalog_relation, 'create_table') }}
-    {{ fresha_iceberg_insert_into(target_relation, compiled_code, language, 'main') }}
+    {{ dbt_fresha_shared.fresha_iceberg_create_table(target_relation, sql_columns, catalog_relation, 'create_table') }}
+    {{ dbt_fresha_shared.fresha_iceberg_insert_into(target_relation, compiled_code, language, 'main') }}
 
   {% elif full_refresh_mode %}
     {{ log("Full refresh mode - recreating table", info=False) }}
-    {% if target_relation.needs_to_drop(existing_relation) %}
-      {{ drop_relation_if_exists(existing_relation) }}
+    {% if existing_relation is not none %}
+      {{ log("Dropping existing table for full refresh", info=False) }}
+      {% call statement('drop_existing') -%}
+        DROP TABLE IF EXISTS {{ existing_relation }}
+      {%- endcall %}
     {% endif %}
 
     {% set sql_columns = get_column_schema_from_query(compiled_code, config.get('sql_header', none)) %}
-    {{ fresha_iceberg_create_table(target_relation, sql_columns, catalog_relation, 'create_table') }}
-    {{ fresha_iceberg_insert_into(target_relation, compiled_code, language, 'main') }}
+    {{ dbt_fresha_shared.fresha_iceberg_create_table(target_relation, sql_columns, catalog_relation, 'create_table') }}
+    {{ dbt_fresha_shared.fresha_iceberg_insert_into(target_relation, compiled_code, language, 'main') }}
 
   {% elif target_relation.table_format != existing_relation.table_format %}
     {% do exceptions.raise_compiler_error(
@@ -70,8 +73,8 @@
   {% else %}
     {{ log("Incremental mode - creating temp table", info=False) }}
     {% set sql_columns = get_column_schema_from_query(compiled_code, config.get('sql_header', none)) %}
-    {{ fresha_iceberg_create_table(tmp_relation, sql_columns, catalog_relation, 'create_tmp_table') }}
-    {{ fresha_iceberg_insert_into(tmp_relation, compiled_code, language, 'insert_tmp_table') }}
+    {{ dbt_fresha_shared.fresha_iceberg_create_table(tmp_relation, sql_columns, catalog_relation, 'create_tmp_table') }}
+    {{ dbt_fresha_shared.fresha_iceberg_insert_into(tmp_relation, compiled_code, language, 'insert_tmp_table') }}
 
     {{ log("Processing schema changes", info=False) }}
     {% do adapter.expand_target_column_types(

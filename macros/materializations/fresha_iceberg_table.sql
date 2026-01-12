@@ -22,7 +22,7 @@
 
   {# Iceberg tables in catalog-linked databases may not be detected by adapter.get_relation() #}
   {% if not existing_relation %}
-    {% set existing_relation = fresha_iceberg_check_table_exists(identifier, database, schema, catalog_relation) %}
+    {% set existing_relation = dbt_fresha_shared.fresha_iceberg_check_table_exists(identifier, database, schema, catalog_relation) %}
   {% endif %}
 
   {%- set target_relation = api.Relation.create(
@@ -44,8 +44,8 @@
 
   {# Step 1: Create temp table and insert data (while old table still available) #}
   {{ log("Creating temp table and inserting data", info=False) }}
-  {{ fresha_iceberg_create_table(tmp_relation, sql_columns, catalog_relation, 'create_tmp_table') }}
-  {{ fresha_iceberg_insert_into(tmp_relation, compiled_code, language, 'insert_tmp_table') }}
+  {{ dbt_fresha_shared.fresha_iceberg_create_table(tmp_relation, sql_columns, catalog_relation, 'create_tmp_table') }}
+  {{ dbt_fresha_shared.fresha_iceberg_insert_into(tmp_relation, compiled_code, language, 'insert_tmp_table') }}
 
   {# Step 2: Drop old table (downtime starts) #}
   {% if existing_relation %}
@@ -57,7 +57,7 @@
 
   {# Step 3: Create new table with same schema #}
   {{ log("Creating target table", info=False) }}
-  {{ fresha_iceberg_create_table(target_relation, sql_columns, catalog_relation, 'create_target') }}
+  {{ dbt_fresha_shared.fresha_iceberg_create_table(target_relation, sql_columns, catalog_relation, 'create_target') }}
 
   {# Step 4: Copy data from temp table (fast operation, downtime ends) #}
   {{ log("Copying data from temp table", info=False) }}

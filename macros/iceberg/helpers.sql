@@ -93,11 +93,11 @@
       string: Complete CREATE ICEBERG TABLE DDL statement
   #}
 
-  {%- set partition_by_string = fresha_iceberg_process_partition_by(catalog_relation) -%}
+  {%- set partition_by_string = dbt_fresha_shared.fresha_iceberg_process_partition_by(catalog_relation) -%}
 
   CREATE ICEBERG TABLE {{ relation }} (
     {%- for column in sql_columns -%}
-      {{ adapter.quote(column.name) }} {{ fresha_iceberg_normalize_data_type(column.data_type) }}
+      {{ adapter.quote(column.name) }} {{ dbt_fresha_shared.fresha_iceberg_normalize_data_type(column.data_type) }}
       {%- if not loop.last %}, {% endif -%}
     {% endfor -%}
   )
@@ -161,7 +161,7 @@
   #}
 
   {% call statement(statement_name) -%}
-    {{ fresha_iceberg_build_table_ddl(relation, sql_columns, catalog_relation) }}
+    {{ dbt_fresha_shared.fresha_iceberg_build_table_ddl(relation, sql_columns, catalog_relation) }}
   {%- endcall %}
 
 {% endmacro %}
