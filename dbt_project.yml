@@ -1,0 +1,11 @@
+name: "dbt_fresha_shared"
+version: "1.0.0"
+config-version: 2
+
+# This dbt package contains shared macros for Fresha dbt projects
+# It is designed to be used as a dependency via packages.yml
+
+macro-paths: ["macros"]
+
+# Require dbt 1.0.0 or newer
+require-dbt-version: [">=1.0.0"]
