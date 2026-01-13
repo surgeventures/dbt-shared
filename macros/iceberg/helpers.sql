@@ -35,15 +35,13 @@
   {%- elif normalized_type == 'REAL' -%}
     {{ return('FLOAT') }}
 
-  {# Handle TEXT with optional length: TEXT, TEXT(16777216) #}
+  {# Handle TEXT → STRING (Iceberg-compatible) #}
   {%- elif normalized_type.startswith('TEXT') -%}
-    {%- if '(' in normalized_type -%}
-      {# Extract length: TEXT(16777216) → VARCHAR(16777216) #}
-      {%- set params = normalized_type.replace('TEXT', '') -%}
-      {{ return('VARCHAR' ~ params) }}
-    {%- else -%}
-      {{ return('VARCHAR') }}
-    {%- endif -%}
+    {{ return('STRING') }}
+
+  {# Handle CHARACTER VARYING/VARCHAR → STRING (Iceberg-compatible) #}
+  {%- elif normalized_type.startswith('CHARACTER VARYING') or normalized_type.startswith('VARCHAR') -%}
+    {{ return('STRING') }}
 
   {# No normalization needed - return as-is #}
   {%- else -%}
@@ -127,8 +125,10 @@
   #}
 
   {{ log("Checking for Iceberg table via SHOW ICEBERG TABLES", info=False) }}
+  {# Strip quotes from identifier for SHOW command - Snowflake doesn't accept quoted identifiers in LIKE clause #}
+  {%- set unquoted_identifier = identifier.replace('"', '') -%}
   {%- call statement('check_iceberg_table', fetch_result=True) -%}
-    SHOW ICEBERG TABLES LIKE '{{ identifier }}' IN SCHEMA {{ database }}.{{ schema }}
+    SHOW ICEBERG TABLES LIKE '{{ unquoted_identifier }}' IN SCHEMA {{ database }}.{{ schema }}
   {%- endcall -%}
 
   {%- set iceberg_check_result = load_result('check_iceberg_table') -%}

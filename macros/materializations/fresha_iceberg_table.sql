@@ -26,18 +26,24 @@
   {% endif %}
 
   {%- set target_relation = api.Relation.create(
-	identifier=identifier,
-	schema=schema,
-	database=database,
-	type='table',
-	table_format=catalog_relation.table_format
-   ) -%}
+    identifier=identifier,
+    schema=schema,
+    database=database,
+    type='table',
+    table_format=catalog_relation.table_format
+  ) -%}
 
   {{ run_hooks(pre_hooks) }}
 
   {# Create temp relation for staging data (minimizes downtime) #}
-  {% set tmp_relation = make_temp_relation(target_relation).incorporate(type='table', catalog=catalog_relation.catalog_name, is_table=true) %}
+  {%- set quoted = identifier.startswith('"') -%}
+  {%- set tmp_identifier = ('"' if quoted else '') ~ identifier.replace('"', '') ~ '__dbt_tmp' ~ ('"' if quoted else '') -%}
+  {% set tmp_relation = api.Relation.create(identifier=tmp_identifier, schema=schema, database=database, type='table', table_format=catalog_relation.table_format).incorporate(catalog=catalog_relation.catalog_name, is_table=true) %}
   {{ log("Using temp relation: " ~ tmp_relation, info=False) }}
+
+  {# Drop temp table if it exists from a previous failed run #}
+  {{ log("Dropping temp table if it exists", info=False) }}
+  {% do drop_relation_if_exists(tmp_relation) %}
 
   {% set sql_columns = get_column_schema_from_query(compiled_code, config.get('sql_header', none)) %}
   {{ log("Retrieved " ~ sql_columns|length ~ " columns from query", info=False) }}

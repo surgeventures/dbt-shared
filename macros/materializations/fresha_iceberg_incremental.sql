@@ -19,11 +19,11 @@
   {{ log("Catalog relation: " ~ catalog_relation, info=False) }}
 
   {%- set target_relation = api.Relation.create(
-	identifier=identifier,
-	schema=schema,
-	database=database,
-	type='table',
-	table_format=catalog_relation.table_format,
+    identifier=identifier,
+    schema=schema,
+    database=database,
+    type='table',
+    table_format=catalog_relation.table_format,
   ) -%}
 
   {% set existing_relation = load_relation(this) %}
@@ -35,7 +35,13 @@
 
   {%- set unique_key = config.get('unique_key') -%}
   {% set incremental_strategy = config.get('incremental_strategy') or 'default' %}
-  {% set tmp_relation = make_temp_relation(this).incorporate(type='table', catalog=catalog_relation.catalog_name, is_table=true) %}
+  {%- set quoted = identifier.startswith('"') -%}
+  {%- set tmp_identifier = ('"' if quoted else '') ~ identifier.replace('"', '') ~ '__dbt_tmp' ~ ('"' if quoted else '') -%}
+  {% set tmp_relation = api.Relation.create(identifier=tmp_identifier, schema=schema, database=database, type='table', table_format=catalog_relation.table_format).incorporate(catalog=catalog_relation.catalog_name, is_table=true) %}
+
+  {# Drop temp table if it exists from a previous failed run #}
+  {{ log("Dropping temp table if it exists", info=False) }}
+  {% do drop_relation_if_exists(tmp_relation) %}
 
   {{ log("Incremental strategy: " ~ incremental_strategy, info=False) }}
 
