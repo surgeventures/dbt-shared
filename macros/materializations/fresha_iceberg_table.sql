@@ -1,12 +1,4 @@
 {% materialization fresha_iceberg_table, adapter='snowflake', supported_languages=['sql', 'python']%}
-  {#
-    Override of standard table materialization for Iceberg REST catalogs.
-
-    Differences from core:
-    - Uses CREATE TABLE (columns) + INSERT instead of CREATE TABLE AS SELECT
-    - Partitions temp table first, then fast copy to target (minimizes downtime)
-    - Fallback check for tables that adapter.get_relation() misses
-  #}
 
   {% set original_query_tag = set_query_tag() %}
 

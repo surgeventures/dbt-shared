@@ -25,7 +25,7 @@
     Common mappings:
     - FIXED → NUMBER
     - REAL → FLOAT
-    - TEXT → VARCHAR
+    - TEXT/VARCHAR → STRING
 
     Args:
       data_type (string): The data type returned from Snowflake metadata
@@ -36,30 +36,19 @@
 
   {%- set normalized_type = data_type | upper | trim -%}
 
-  {# Handle FIXED with optional precision/scale: FIXED, FIXED(38,0) #}
   {%- if normalized_type.startswith('FIXED') -%}
     {%- if '(' in normalized_type -%}
-      {# Extract precision/scale: FIXED(38,0) → NUMBER(38,0) #}
       {%- set params = normalized_type.replace('FIXED', '') -%}
       {{ return('NUMBER' ~ params) }}
     {%- else -%}
-      {# Iceberg tables require explicit precision and scale #}
       {{ return('NUMBER(38,0)') }}
     {%- endif -%}
-
-  {# Handle REAL → FLOAT #}
   {%- elif normalized_type == 'REAL' -%}
     {{ return('FLOAT') }}
-
-  {# Handle TEXT → STRING (Iceberg-compatible) #}
   {%- elif normalized_type.startswith('TEXT') -%}
     {{ return('STRING') }}
-
-  {# Handle CHARACTER VARYING/VARCHAR → STRING (Iceberg-compatible) #}
   {%- elif normalized_type.startswith('CHARACTER VARYING') or normalized_type.startswith('VARCHAR') -%}
     {{ return('STRING') }}
-
-  {# No normalization needed - return as-is #}
   {%- else -%}
     {{ return(data_type) }}
   {%- endif -%}

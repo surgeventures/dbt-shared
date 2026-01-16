@@ -1,11 +1,4 @@
 {% materialization fresha_iceberg_incremental, adapter='snowflake', supported_languages=['sql', 'python'] -%}
-  {#
-    Override of standard incremental materialization for Iceberg REST catalogs.
-
-    Differences from core:
-    - Uses CREATE TABLE (columns) + INSERT instead of CREATE TABLE AS SELECT
-    - Fallback check for tables that load_relation() misses
-  #}
 
   {% set original_query_tag = set_query_tag() %}
 
