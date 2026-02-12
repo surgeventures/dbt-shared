@@ -106,7 +106,7 @@
 
     {% if query_tag_json|length < 2000 %}
         {% set original_query_tag = get_current_query_tag() %}
-        {{ log("Setting query_tag to '" ~ query_tag_json ~ "'. Original query_tag: '" ~ original_query_tag ~ "'", info=True) }}
+        {{ log("Setting query_tag to '" ~ query_tag_json ~ "'. Original query_tag: '" ~ original_query_tag ~ "'", info=False) }}
         {% do run_query("alter session set query_tag = '{}'".format(query_tag_json)) %}
         {{ return(original_query_tag) }}
     {% else %}
